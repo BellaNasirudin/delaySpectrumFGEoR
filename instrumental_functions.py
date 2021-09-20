@@ -47,12 +47,12 @@ def interpolate_frequencies(data, freqs, linFreqs, uv_range=100, new_ncells = No
 
     return interpData
     
-def sigma(frequencies, tile_diameter = 300):
+def sigma(frequencies, tile_diameter = 35):
     "The Gaussian beam width at each frequency"
     epsilon = 0.42  # scaling from airy disk to Gaussian
     return ((epsilon * const.c) / (frequencies / un.s *  tile_diameter * un.m)).to(un.dimensionless_unscaled).value
 
-def gaussian_beam(sky_size, frequencies, n_cells, min_attenuation = 5e-7):
+def gaussian_beam(sky_size, frequencies, n_cells, min_attenuation = 5e-7, tile_diameter = 35):
     """
     Generate a frequency-dependent Gaussian beam attenuation across the sky per frequency.
     Parameters
@@ -72,8 +72,10 @@ def gaussian_beam(sky_size, frequencies, n_cells, min_attenuation = 5e-7):
     # Create a meshgrid for the beam attenuation on sky array
     L, M = np.meshgrid(np.sin(sky_coords), np.flip(np.sin(sky_coords)))
 
-    attenuation = np.exp(
-        np.outer(-(L ** 2 + M ** 2), 1. / (2 *  sigma(frequencies) ** 2)).reshape(
+    sigma_beam = sigma(frequencies, tile_diameter)
+
+    attenuation = 1 / sigma_beam / np.sqrt(2 * np.pi) * np.exp(
+        np.outer(-(L ** 2 + M ** 2), 1. / (2 *  sigma_beam ** 2)).reshape(
             ( n_cells,  n_cells, len(frequencies))))
     
     attenuation[attenuation<min_attenuation] = 0
