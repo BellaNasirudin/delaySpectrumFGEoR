@@ -14,7 +14,7 @@ def delay_transform(data, frequencies):
 
 	return delayTaper_ft, eta
 
-def calculate_2DdelayPS(data, bl_rotated, frequencies, max_rbin= 25, min_rbin=875, numberBins = 61):
+def calculate_2DdelayPS(data, bl_rotated, frequencies, min_rbin= 25, max_rbin=850, numberBins = 61):
 
 	u = np.outer(bl_rotated[:,0], (frequencies/const.c).value)
 	v = np.outer(bl_rotated[:,1], (frequencies/const.c).value)
@@ -23,7 +23,7 @@ def calculate_2DdelayPS(data, bl_rotated, frequencies, max_rbin= 25, min_rbin=87
 
 	r = np.sqrt(u**2 + v**2)
 	
-	rbins = np.linspace(max_rbin, min_rbin, numberBins)
+	rbins = np.linspace(min_rbin, max_rbin, numberBins)
 
 	sq_delay = np.abs(delayTaper_ft)**2
 
