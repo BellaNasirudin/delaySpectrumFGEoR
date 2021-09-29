@@ -59,20 +59,35 @@ def calculate_1DdelayPS(data, baselines_rotated, frequencies, sky_size, min_kbin
 
 	k = np.sqrt(kperp**2 + kpar**2)
 
-	# avoid the area where there are foregrounds based on the buffer
-	fg_edge = kpar[int(len(frequencies)/2) + fg_buffer]
-
-	# and also the wedge
+	# find the wedge
 	# remember that sky size is the diameter in lm so need to find radius and multiply by pi to get to radian 
 	fg_wedge = kparallel_wedge(kperp, sky_size / 2 * np.pi, np.min(frequencies_to_redshifts(frequencies)))
 
-	print(k.shape, kpar.shape)
+	# find foregrounds based on the buffer
+	fg_edge = kpar[int(len(frequencies)/2) + fg_buffer]
 
-	weights = np.histogram(k[((np.abs(kpar)>=fg_edge) & (np.abs(kpar)>=fg_wedge))], kbins)[0]
-		
-	power = np.histogram(k[((np.abs(kpar)>=fg_edge) & (np.abs(kpar)>=fg_wedge))], kbins, weights = sq_cosmo[((np.abs(kpar)>=fg_edge) & (np.abs(kpar)>=fg_wedge))])[0]
+	# and only include this area
+	include_kparBuffer = np.where(np.abs(kpar)>=fg_edge)[0] #& (np.abs(kpar)>=fg_wedge)
 
-	power[weights>0] /= (weights[weights>0]) #**2)
+	sq_cosmo = sq_cosmo[:, include_kparBuffer]
+	k = k[:, include_kparBuffer]
+	kpar = kpar[include_kparBuffer]
+	fg_wedge = fg_wedge[:, include_kparBuffer]
+
+	# make a 2-D shape containing the values of kpar for each kperp
+	kpar_copy = np.outer(np.ones(np.shape(fg_wedge)[0]), kpar)
+
+	# and only include all regiones larger than the wedge
+	include_kparWedge = np.abs(kpar_copy)>fg_wedge #& (np.abs(kpar)>=fg_wedge)
+
+	k = k[include_kparWedge]
+	sq_cosmo = sq_cosmo[include_kparWedge]
+
+	# finally bin them
+	weights = np.histogram(k, kbins)[0]		
+	power = np.histogram(k, kbins, weights = sq_cosmo)[0]
+
+	power[weights>0] /= (weights[weights>0])
 
 	return power, kbins[1:]+np.diff(kbins)[0]/2 , weights
 
