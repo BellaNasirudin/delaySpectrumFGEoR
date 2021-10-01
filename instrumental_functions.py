@@ -74,8 +74,7 @@ def gaussian_beam(sky_size, frequencies, n_cells, min_attenuation = 5e-7, tile_d
 
     sigma_beam = sigma(frequencies, tile_diameter)
 
-    attenuation = 1 / sigma_beam / np.sqrt(2 * np.pi) * np.exp(
-        np.outer(-(L ** 2 + M ** 2), 1. / (2 *  sigma_beam ** 2)).reshape(
+    attenuation = np.exp( np.outer(-(L ** 2 + M ** 2), 1. / (sigma_beam ** 2)).reshape(
             ( n_cells,  n_cells, len(frequencies))))
     
     attenuation[attenuation<min_attenuation] = 0
